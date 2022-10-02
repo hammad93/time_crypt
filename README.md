@@ -19,4 +19,4 @@ This overviews how we can utilize the API in the real-world use case that the al
 2. Enter the code into your padlock(s) and lock the safe.
 3. Check the status of the lock and unlock time. All time unlocked codes will automatically be exposed.
 
-The 10 digits that were meant to be "forgotten" is based on Miller's law that humans are able to remember about 7, plus or minus 2, objects in their mind. If your memory is much better than most, we recommend some tequila before this procedure. 
+The 10 digits that were meant to be "forgotten" is based on Miller's law that humans are able to remember about 7, plus or minus 2, objects in their short-term memory. If your memory is much better than most, we recommend some tequila before this procedure. 
