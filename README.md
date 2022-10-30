@@ -1,11 +1,15 @@
 # time_crypt
 A cryptographic function and enables decryption based on a timer or other specified time.
 
+## Link
+
+_The experimental deployment is still in process_
+
 ## Use Case
-There is a secret you want exposed only after a certain amount of time or at an exact date and time. You do not want yourself or anyone else to know this secret until we have reached this time-based requirements.
+There is a secret you want exposed only after a certain amount of time or at an exact date and time. You do not want yourself or anyone else to know this secret until we have reached this time-based requirement.
 
 ## Method
-We can define an oracle of time, in this case an API to Microsoft's time gateway, and use their SSL certificate to authenticate the validity of the time.
+We can define an oracle of time and use their SSL certificate to authenticate the validity of the time.
 
 We then create a web based SaaS where we create a public and private key. Secrets are encrypted and the SaaS decrypts it based on stored private key as well as the valid timestamp.
 
