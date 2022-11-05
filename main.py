@@ -2,9 +2,11 @@ from fastapi import FastAPI
 import pgpy
 from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 from pgpy import PGPKey, PGPMessage
+import secrets
+from dateutil.parser import parse
+import datetime
 
-# run with `uvicorn main:app --reload`
-app = FastAPI(docs_url="/")
+# scroll down to the bottom for initialization
 
 # globals
 public_key = False
@@ -14,9 +16,65 @@ default_pass = 'j5&45MZsF0v&'
 @app.get("/test")
 def read_root():
     '''
-    Please reference eference https://fastapi.tiangolo.com/
+    Please reference https://fastapi.tiangolo.com/
     '''
     return {"Hello": "World"}
+
+def create(expire, minutes = None, log = False, length = 8):
+    '''
+    This creates a passcode for the API. Timezone 
+    will be interpreted from the IP of the request.
+    
+    Parameters
+    ----------
+    expire string
+        A string to interpret a timestamp for when
+        the passcode should expire.
+    minutes string
+        (Optional) Alternatively to expiration, a 
+        user can input a length of time to create.
+        The current time used will be the timetamp
+        from the request.
+    log boolean
+        (Optional) Specifies if we log the passcode
+        and automatically unlock it based on the 
+        IP of the request.
+    length integer
+        (Optional) By default, it is 8 but we can 
+        configure the number of digits in the passcode.
+    '''
+    # the unlock data structure is at a timestamp
+    # so we construct it here
+    if minutes : # user specifies an amount of time to expire from the request
+        # keep this command earlier in the method to ensure low latency
+        request_timestamp = datetime.datetime.now() # TODO
+        expire_time = request_timestamp + datetime.timedelta(minutes = minutes)
+    else : # user specifies a time to expire
+        expire_time = parse(expire)
+    # generate a passcode
+    passcode = ''.join([secrets.randbelow(10) for i in range(length)])
+    key = lock_data(expire_time, passcode)
+
+def lock_data(expire_time, passcode) :
+    '''
+    Parameters
+    ----------
+    expire_time datetime
+        Will be transformed to a ISO8601 
+        timestamp and saved in the key
+        message.
+    passcode string
+        The randomly generated passcode. Please
+        do not have any spaces in the passcode.
+
+    Returns
+    -------
+    string
+        The encrypted string based on the input.
+    '''
+    data = f"{expire_time.iso_format()} {passcode}"
+    key = encrypt(data) # encrypt it using PGP
+    return key
 
 def generate_keys(key_strength = 4096):
     '''
@@ -82,3 +140,8 @@ def decrypt(message):
     unencrypted_string = result.message
     print(unencrypted_string)
     return unencrypted_string
+
+# set globals
+set_keys()
+# run with `uvicorn main:app --reload`
+app = FastAPI(docs_url="/")
