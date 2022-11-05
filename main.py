@@ -1,26 +1,29 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 import pgpy
 from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 from pgpy import PGPKey, PGPMessage
 import secrets
 from dateutil.parser import parse
 import datetime
+import requests
 
 # scroll down to the bottom for initialization
 
 # globals
-public_key = False
-private_key = False
-default_pass = 'j5&45MZsF0v&'
+PUBLIC_KEY = False
+PRIVATE_KEY = False
+DEFAULT_PASS = 'j5&45MZsF0v&'
+IP_TABLE = {}
 
 @app.get("/test")
-def read_root():
+def hello_world():
     '''
     Please reference https://fastapi.tiangolo.com/
     '''
     return {"Hello": "World"}
 
-def create(expire, minutes = None, log = False, length = 8):
+@app.get("/create")
+def create(request: Request, expire, minutes=None, log=False, length=8):
     '''
     This creates a passcode for the API. Timezone 
     will be interpreted from the IP of the request.
@@ -42,18 +45,32 @@ def create(expire, minutes = None, log = False, length = 8):
     length integer
         (Optional) By default, it is 8 but we can 
         configure the number of digits in the passcode.
+    request Request
+        The object to access the request directly.
     '''
-    # the unlock data structure is at a timestamp
-    # so we construct it here
-    if minutes : # user specifies an amount of time to expire from the request
-        # keep this command earlier in the method to ensure low latency
-        request_timestamp = datetime.datetime.now() # TODO
-        expire_time = request_timestamp + datetime.timedelta(minutes = minutes)
+    # we construct the time data for the lock
+    if minutes : # user specifies an amount of time
+        expire_time = parse(
+                request.headers['Date']
+            ) + datetime.timedelta(minutes = minutes)
     else : # user specifies a time to expire
         expire_time = parse(expire)
+    
     # generate a passcode
     passcode = ''.join([secrets.randbelow(10) for i in range(length)])
     key = lock_data(expire_time, passcode)
+    result = {
+        "expires_at" : expire_time,
+        "key" : key
+    }
+
+    # add to ip table
+    if log :
+        ip = request.client.host
+        global IP_TABLE
+        IP_TABLE[ip] = result
+
+    return result
 
 def lock_data(expire_time, passcode) :
     '''
@@ -76,6 +93,44 @@ def lock_data(expire_time, passcode) :
     key = encrypt(data) # encrypt it using PGP
     return key
 
+@app.get("/unlock")
+def unlock(key) :
+    '''
+    Based on the key returned from the create API,
+    this API unlocks it.
+
+    Parameters
+    ----------
+    key string
+        Encoded public key message with the time and
+        passcode in it.
+
+    Returns
+    -------
+    string
+        The passcode if there is one or an associated
+        error message
+    '''
+    try :
+        decrypted = decrypt(key).split(" ")
+    except :
+        return "Error, unknown key"
+    decrypted_time = decrypted[0]
+    decrypted_passcode = decrypted[1]
+    # check if it can be unlocked
+    if parse(decrypted_time) <= datetime.datetime.now() :
+        return decrypted_passcode
+    else :
+        return f"Expires on {decrypted_time}"
+
+@app.get("/ip_unlock")
+def ip_unlock(request: Request):
+    '''
+    Checks IP of request and returns the status
+    of the keys
+    '''
+    return IP_TABLE.get(request.client.host, "No IP entries found")
+
 def generate_keys(key_strength = 4096):
     '''
     This function creates a public and private key based on PGP
@@ -94,7 +149,7 @@ def generate_keys(key_strength = 4096):
         compression=[CompressionAlgorithm.ZLIB, CompressionAlgorithm.BZ2, CompressionAlgorithm.ZIP, CompressionAlgorithm.Uncompressed])
 
     # password protect private key
-    key.protect(default_pass, SymmetricKeyAlgorithm.AES256, HashAlgorithm.SHA256)
+    key.protect(DEFAULT_PASS, SymmetricKeyAlgorithm.AES256, HashAlgorithm.SHA256)
 
     # private and public key
     private_key = str(key)
@@ -111,20 +166,20 @@ def set_keys():
     '''
     Set the keys as globals
     '''
-    global public_key
-    global private_key
+    global PUBLIC_KEY
+    global PRIVATE_KEY
 
     keys = generate_keys()
 
-    public_key = keys['public_key']
-    private_key = keys['private_key']
+    PUBLIC_KEY = keys['public_key']
+    PRIVATE_KEY = keys['private_key']
 
 def encrypt(message):
     '''
     Encrypts the message using the global public key
     '''
     message = pgpy.PGPMessage.new(message)
-    encrypted_string = str(PGPKey.from_blob(public_key)[0].encrypt(message))
+    encrypted_string = str(PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(message))
     print(encrypted_string)
     return encrypted_string
 
@@ -134,8 +189,8 @@ def decrypt(message):
     based on the private key global variable
     '''
     # decrypt using private key
-    private_key_test = PGPKey.from_blob(private_key)[0] # reads in from string format
-    with private_key_test.unlock(default_pass) as unlocked_private_key :
+    private_key_test = PGPKey.from_blob(PRIVATE_KEY)[0] # reads in from string format
+    with private_key_test.unlock(DEFAULT_PASS) as unlocked_private_key :
         result = unlocked_private_key.decrypt(PGPMessage.from_blob(message))
     unencrypted_string = result.message
     print(unencrypted_string)
