@@ -97,7 +97,7 @@ def lock_data(expire_time, passcode) :
     return key
 
 @app.get("/unlock")
-def unlock(key) :
+def unlock(key: str) :
     '''
     Based on the key returned from the create API,
     this API unlocks it.
