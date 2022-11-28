@@ -73,7 +73,7 @@ def create(request: Request, expire=None, minutes=None, log=False, length=8):
     return {
         "passcode" : passcode,
         "expires_at" : expire_time,
-        "key" : key.replace("\n", "\\n")
+        "key" : key
     }
 
 def lock_data(expire_time, passcode) :
@@ -192,7 +192,7 @@ def encrypt(message):
     Encrypts the message using the global public key
     '''
     message = pgpy.PGPMessage.new(message)
-    encrypted_string = str(PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(message))
+    encrypted_string = PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(message).decode("utf-8")
     print(encrypted_string)
     return encrypted_string
 
