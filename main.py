@@ -115,10 +115,7 @@ def unlock(key: str) :
         The passcode if there is one or an associated
         error message
     '''
-    try :
-        decrypted = decrypt(key).split(" ")
-    except :
-        return "Error, unknown key"
+    decrypted = decrypt(key).split(" ")
     decrypted_time = decrypted[0]
     decrypted_passcode = decrypted[1]
     # check if it can be unlocked
