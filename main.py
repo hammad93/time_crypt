@@ -6,7 +6,6 @@ import secrets
 from dateutil.parser import parse
 import datetime
 import requests
-import json
 
 # scroll down to the bottom for initialization
 # run with `uvicorn main:app --reload --host 0.0.0.0 --port 1337`
@@ -189,7 +188,7 @@ def encrypt(message):
     Encrypts the message using the global public key
     '''
     message = pgpy.PGPMessage.new(message)
-    encrypted_string = bytes(str(PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(message)), encoding='utf8')
+    encrypted_string = bytes(PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(message)).decode("unicode_escape")
     print(encrypted_string)
     return encrypted_string
 
