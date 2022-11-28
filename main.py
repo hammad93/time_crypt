@@ -115,7 +115,7 @@ def unlock(key: str) :
         The passcode if there is one or an associated
         error message
     '''
-    decrypted = decrypt(key).split(" ")
+    decrypted = decrypt(pgpy.PGPMessage.from_blob(key)).split(" ")
     decrypted_time = decrypted[0]
     decrypted_passcode = decrypted[1]
     # check if it can be unlocked
