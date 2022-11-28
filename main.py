@@ -192,7 +192,7 @@ def encrypt(message):
     Encrypts the message using the global public key
     '''
     message = pgpy.PGPMessage.new(message)
-    encrypted_string = str(PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(message)).decode("utf-8")
+    encrypted_string = str(PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(message)).encode("utf-8")
     print(encrypted_string)
     return encrypted_string
 
