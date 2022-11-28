@@ -72,7 +72,7 @@ def create(request: Request, expire=None, minutes=None, log=False, length=8):
 
     return json.dumps({
         "passcode" : passcode,
-        "expires_at" : expire_time,
+        "expires_at" : expire_time.isoformat(),
         "key" : key
     })
 
