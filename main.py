@@ -117,6 +117,7 @@ def unlock(key: str) :
         The passcode if there is one or an associated
         error message
     '''
+    key = base64.b64encode(key.encode("ascii"))
     decrypted = decrypt(key).split(" ")
     decrypted_time = decrypted[0]
     decrypted_passcode = decrypted[1]
