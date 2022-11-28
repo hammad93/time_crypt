@@ -70,11 +70,11 @@ def create(request: Request, expire=None, minutes=None, log=False, length=8):
             "key" : key
         }
 
-    return json.dumps({
+    return {
         "passcode" : passcode,
-        "expires_at" : expire_time.isoformat(),
-        "key" : key
-    })
+        "expires_at" : expire_time,
+        "key" : key.replace("\n", "\\n")
+    }
 
 def lock_data(expire_time, passcode) :
     '''
