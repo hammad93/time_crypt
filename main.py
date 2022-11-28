@@ -8,6 +8,8 @@ import datetime
 import requests
 
 # scroll down to the bottom for initialization
+# run with `uvicorn main:app --reload`
+app = FastAPI(docs_url="/")
 
 # globals
 PUBLIC_KEY = False
@@ -23,7 +25,7 @@ def hello_world():
     return {"Hello": "World"}
 
 @app.get("/create")
-def create(request: Request, expire, minutes=None, log=False, length=8):
+def create(request: Request, expire=None, minutes=None, log=False, length=8):
     '''
     This creates a passcode for the API. Timezone 
     will be interpreted from the IP of the request.
@@ -50,27 +52,28 @@ def create(request: Request, expire, minutes=None, log=False, length=8):
     '''
     # we construct the time data for the lock
     if minutes : # user specifies an amount of time
-        expire_time = parse(
-                request.headers['Date']
-            ) + datetime.timedelta(minutes = minutes)
+        expire_time = datetime.datetime.now() + datetime.timedelta(minutes = int(minutes))
     else : # user specifies a time to expire
         expire_time = parse(expire)
     
     # generate a passcode
-    passcode = ''.join([secrets.randbelow(10) for i in range(length)])
+    passcode = ''.join([str(secrets.randbelow(10)) for i in range(int(length))])
     key = lock_data(expire_time, passcode)
-    result = {
-        "expires_at" : expire_time,
-        "key" : key
-    }
 
     # add to ip table
     if log :
         ip = request.client.host
         global IP_TABLE
-        IP_TABLE[ip] = result
+        IP_TABLE[ip] = {
+            "expires_at" : expire_time,
+            "key" : key
+        }
 
-    return result
+    return {
+        "passcode" : passcode,
+        "expires_at" : expire_time,
+        "key" : key
+    }
 
 def lock_data(expire_time, passcode) :
     '''
@@ -89,7 +92,7 @@ def lock_data(expire_time, passcode) :
     string
         The encrypted string based on the input.
     '''
-    data = f"{expire_time.iso_format()} {passcode}"
+    data = f"{expire_time.isoformat()} {passcode}"
     key = encrypt(data) # encrypt it using PGP
     return key
 
@@ -198,5 +201,3 @@ def decrypt(message):
 
 # set globals
 set_keys()
-# run with `uvicorn main:app --reload`
-app = FastAPI(docs_url="/")
