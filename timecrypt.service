@@ -3,7 +3,7 @@ Description=The SaaS for time_crypt
 After=network.target
 
 [Service]
-WorkingDirectory=~/time_crypt/
+WorkingDirectory=/root/time_crypt/
 ExecStart=uvicorn main:app --reload --host 0.0.0.0 --port 1337
 Restart=always
 
