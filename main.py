@@ -6,6 +6,7 @@ import secrets
 from dateutil.parser import parse
 import datetime
 import requests
+import base64
 
 # scroll down to the bottom for initialization
 # run with `uvicorn main:app --reload --host 0.0.0.0 --port 1337`
@@ -59,6 +60,8 @@ def create(request: Request, expire=None, minutes=None, log=False, length=8):
     # generate a passcode
     passcode = ''.join([str(secrets.randbelow(10)) for i in range(int(length))])
     key = lock_data(expire_time, passcode)
+    # convert to base64 to avoid encoding problems
+    key = base64.b64encode(key).decode("ascii")
 
     # add to ip table
     if log :
@@ -188,8 +191,7 @@ def encrypt(message):
     Encrypts the message using the global public key
     '''
     message = pgpy.PGPMessage.new(message)
-    encrypted_string = bytes(PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(message)).decode("unicode_escape")
-    print(encrypted_string)
+    encrypted_string = bytes(PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(message))
     return encrypted_string
 
 def decrypt(message):
