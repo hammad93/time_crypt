@@ -27,6 +27,19 @@ Returns passcodes that are unlocked, or automatically decrypted based on time, b
 ### `locked`
 Returns currently locked passcodes.
 
+## Install
+The software runs on Python 3. All other requirements are in the following code block that can be copy-pasted into a requirements.txt file.
+
+```requirements.txt
+fastapi
+"uvicorn[standard]"
+pgpy
+dateutil
+python-dateutil --upgrade
+requests
+```
+
+
 ## Quickstart
 
 This overviews how we can utilize the API in the real-world use case that the algorithm was made for. The requirements are that this algorithm works regardless of the padlock technologies. Often, manufacturers of time-lock mechanisms make low-quality physical locks. Even if they improved, it may not be as effective against lock-picking compared to heavy-duty padlocks. Here, we present a solution that combines the two. We give the user a combination to put into multiple combination padlocks that is meant to be forgotten. If the user remembers, they simply request a new random combination. The combination is made up of 8 characters or digits. This means that this algorithm can be reused for many types of combination padlock technology in the past or present without additional costs.

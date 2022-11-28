@@ -8,7 +8,7 @@ import datetime
 import requests
 
 # scroll down to the bottom for initialization
-# run with `uvicorn main:app --reload`
+# run with `uvicorn main:app --reload --host 0.0.0.0 --port 1337`
 app = FastAPI(docs_url="/")
 
 # globals
@@ -134,10 +134,17 @@ def ip_unlock(request: Request):
     '''
     return IP_TABLE.get(request.client.host, "No IP entries found")
 
-def generate_keys(key_strength = 4096):
+def generate_keys(key_strength = 4096, failsafe = False):
     '''
     This function creates a public and private key based on PGP
     protocols.
+
+    Parameters
+    ----------
+    failsafe bool
+        The failsafe prints the private and public pgp key to the console.
+        This is disabled by default because it leads to an exploit that
+        breaks end-to-end encryption.
 
     References
     ----------
@@ -157,8 +164,10 @@ def generate_keys(key_strength = 4096):
     # private and public key
     private_key = str(key)
     public_key = str(key.pubkey)
-    print(private_key)
-    print(public_key)
+
+    if failsafe :
+        print(private_key)
+        print(public_key)
 
     return {
         'public_key' : public_key,
