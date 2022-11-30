@@ -3,7 +3,7 @@ A cryptographic function and enables decryption based on a timer or other specif
 
 ## Link
 
-_The experimental deployment is still in process_
+http://198.57.44.233:1337/
 
 ## Use Case
 There is a secret you want exposed only after a certain amount of time or at an exact date and time. You do not want yourself or anyone else to know this secret until we have reached this time-based requirement.
