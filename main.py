@@ -66,11 +66,16 @@ def create(request: Request, expire=None, minutes=None, log=False, length=8):
     # add to ip table
     if log :
         ip = request.client.host
-        global IP_TABLE
-        IP_TABLE[ip] = {
+        data = {
             "expires_at" : expire_time,
             "key" : key
         }
+        global IP_TABLE
+        if IP_TABLE.get(ip) :
+            IP_TABLE[ip].append(data)
+        else :
+            IP_TABLE[ip] = [data]
+        IP_TABLE[ip] = data
 
     return {
         "passcode" : passcode,
