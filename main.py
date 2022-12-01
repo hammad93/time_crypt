@@ -75,7 +75,6 @@ def create(request: Request, expire=None, minutes=None, log=False, length=8):
             IP_TABLE[ip].append(data)
         else :
             IP_TABLE[ip] = [data]
-        IP_TABLE[ip] = data
 
     return {
         "passcode" : passcode,
