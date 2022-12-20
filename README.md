@@ -1,5 +1,5 @@
 # time_crypt
-A cryptographic function and enables decryption based on length of time or other specified time.
+A cryptographic function that enables decryption based on length of time or other specified time.
 
 ## Link
 
