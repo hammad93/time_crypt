@@ -1,0 +1,90 @@
+\documentclass{article}
+
+
+\usepackage{PRIMEarxiv}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}
+\usepackage{fancyhdr}       % header
+\usepackage{graphicx}       % graphics
+\graphicspath{{media/}}     % organize your images and other figures under media/ folder
+\usepackage{amsmath}
+\usepackage{colonequals}
+%Header
+\pagestyle{fancy}
+\thispagestyle{empty}
+\rhead{ \textit{ }} 
+
+% Update your Headers here
+\fancyhead[LO]{time_crypt}
+% \fancyhead[RE]{Firstauthor and Secondauthor} % Firstauthor et al. if more than 2 - must use \documentclass[twoside]{article}
+
+
+
+  
+%% Title
+\title{time\_crypt, A cryptographic method that enables decryption based on time comparison.
+}
+
+\author{ \href{https://orcid.org/0000-0003-0472-253X}{\includegraphics[scale=0.06]{orcid.pdf}\hspace{1mm}Hammad A.~Usmani} \\
+    Georgia Institute of Technology\\
+    Atlanta, Georgia \\
+    \texttt{husmani@gatech.edu} \\
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+}
+
+
+\begin{document}
+\maketitle
+
+
+\begin{abstract}
+Suppose you want to keep something locked only for a certain time or at an exact date and time. You do not want yourself or anyone else to access it until we have reached this time-based requirement. We create a web-based open-sourced (CC0) software as a service (SaaS) where we create a public and private key. Secrets are encrypted, and the SaaS decrypts them based on the stored private key and the valid timestamp. A unique ability of this method is a design that can be used to lock for longer times, in years. Current methods utilizing padlocks and safe products are not designed to withstand physical brute force. In addition, they do not separate concerns between cryptography and durability. The algorithm utilizes industry-standard cryptography and is compatible with locks or safes that can withstand tampering. TIME\_CRYPT can integrate with other applications through a representational state transfer (REST) as an application programming interface (API). Experimenters can manually enter a random combination (meant to be forgotten) from the SaaS to set it as a passcode to their physical safes and locks. The current deployment included technologies such as Linux, Python, and PGPy. There are many applications of this ranging from pharmaceuticals, banking, and mental health, among others. 
+\end{abstract}
+
+
+% keywords can be removed
+\keywords{time \and lock \and cryptography \and time\_crypt}
+
+
+\section{Introduction}
+We can set the time lock with a function, f(k,t), where k is a private key that encrypts a message, t is when the time lock expires, and l is a lock or the output of the private key message.
+\begin{equation}
+    f(k, t) = m, l
+\end{equation}
+The message contains a random variable that can be represented as a passcode for a safe. It also contains the expiry time in ISO8601 format. Based on the application, the message can have other things.
+\begin{equation}
+    m = (t, p)
+\end{equation}
+We only unlock when the current time, c, exceeds the expiry time expressed as an inequality, i.
+\begin{equation}
+    i = c > t
+\end{equation}
+We can define another function, f'(), that unlocks the lock. This function utilizes the time comparison or i and returns the unencrypted message with the passcode only if the inequality is true.
+\begin{equation}
+    f'(i, l, k) = m
+\end{equation}
+
+
+\end{document}
