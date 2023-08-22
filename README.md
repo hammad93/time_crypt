@@ -3,7 +3,7 @@ A cryptographic function that enables decryption based on length of time or othe
 
 ## Link
 
-http://198.57.44.233:1337/
+https://port-1337-time_crypt-hamu515426.preview.codeanywhere.com/
 
 ## Use Case
 There is a secret you want exposed only after a certain amount of time or at an exact date and time. You do not want yourself or anyone else to know this secret until we have reached this time-based requirement.
@@ -28,16 +28,72 @@ Returns passcodes that are unlocked, or automatically decrypted based on time, b
 Returns currently locked passcodes.
 
 ## Install
-The software runs on Python 3. All other requirements are in the following code block that can be copy-pasted into a requirements.txt file.
+The software runs on Python 3. We can install all libraries by running the command `pip install` and then the library, e.g. `pip install fastapi` and then `pip install "uvicorn[standard]"`, etc.  
 
-```requirements.txt
+```requirements
 fastapi
 "uvicorn[standard]"
 pgpy
-dateutil
 python-dateutil --upgrade
 requests
 ```
+<h2>Setting up timecrypt.service in Ubuntu</h2>
+
+<h3>1. Save the Service File</h3>
+<p>If you haven't already, save the content below to a file named <code>timecrypt.service</code>.</p>
+
+<pre>
+[Unit]
+Description=The SaaS for time_crypt
+After=network.target
+
+[Service]
+WorkingDirectory=/git/clone/path/time_crypt/
+ExecStart=/which/uvicorn main:app --reload --host 0.0.0.0 --port 1337
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+</pre>
+
+<h3>2. Move the Service File to systemd Directory</h3>
+<pre>
+sudo cp timecrypt.service /etc/systemd/system/
+</pre>
+
+<h3>3. Ensure Uvicorn is Accessible</h3>
+<p>If you installed Uvicorn using pip, you can find its path with:</p>
+<pre>
+which uvicorn
+</pre>
+<p>If a path is returned, it's globally accessible. Otherwise, adjust your PATH variable or provide the full path in the service file.</p>
+
+<h3>4. Reload systemd</h3>
+<pre>
+sudo systemctl daemon-reload
+</pre>
+
+<h3>5. Start and Enable the Service</h3>
+<p>Start the service:</p>
+<pre>
+sudo systemctl start timecrypt.service
+</pre>
+<p>Enable the service to start on boot:</p>
+<pre>
+sudo systemctl enable timecrypt.service
+</pre>
+
+<h3>6. Check the Service Status</h3>
+<p>To ensure your service has started successfully and to view its logs, use:</p>
+<pre>
+sudo systemctl status timecrypt.service
+</pre>
+
+<h3>Notes:</h3>
+<ul>
+<li>For a production deployment, consider removing the <code>--reload</code> flag in the <code>ExecStart</code> command. The reload flag is more suited for development as it restarts the server when code changes are detected.</li>
+<li>If you face any errors or the service doesn't start, follow diagnostic steps to check and debug any issues.</li>
+</ul>
 
 
 ## Quickstart
