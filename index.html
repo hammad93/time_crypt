@@ -5,25 +5,46 @@
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <style>
+    body, html {
+      height: 100%;
+    }
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    input, button {
+      margin-bottom: 1rem;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container text-center" style="margin-top: 50px;">
-  <button onclick="showCreate()" class="btn btn-primary">Create</button>
-  <button onclick="showUnlock()" class="btn btn-secondary">Unlock</button>
-
-  <div id="createDiv">
-    <h2>Create Interface</h2>
-    <input type="text" id="expireDate" placeholder="Enter future date">
-    <button onclick="generatePasscode()" class="btn btn-success">Generate</button>
-    <p id="createOutput"></p>
+<div class="container text-center">
+  <div class="row">
+    <div class="col">
+      <button onclick="showCreate()" class="btn btn-primary">Create</button>
+      <button onclick="showUnlock()" class="btn btn-secondary">Unlock</button>
+    </div>
   </div>
-
-  <div id="unlockDiv" style="display: none;">
-    <h2>Unlock Interface</h2>
-    <input type="text" id="keyInput" placeholder="Enter key">
-    <button onclick="unlockPasscode()" class="btn btn-success">Unlock</button>
-    <p id="unlockOutput"></p>
+  <div class="row">
+    <div class="col">
+      <div id="createDiv">
+        <h2>Create Interface</h2>
+        <input type="text" id="expireDate" class="form-control" placeholder="Enter future date" style="width: auto; margin: 0 auto;">
+        <button onclick="generatePasscode()" class="btn btn-success">Generate</button>
+        <div id="createOutput"></div>
+      </div>
+  
+      <div id="unlockDiv" style="display: none;">
+        <h2>Unlock Interface</h2>
+        <input type="text" id="keyInput" class="form-control" placeholder="Enter key" style="width: auto; margin: 0 auto;">
+        <button onclick="unlockPasscode()" class="btn btn-success">Unlock</button>
+        <div id="unlockOutput"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -46,7 +67,7 @@ function generatePasscode() {
   .then(data => {
     const passcode = data.passcode;
     const key = data.key;
-    const output = `<p>Passcode: <span style="user-select: none;">${passcode}</span></p><p>Key: <input type="text" value="${key}" readonly></p>`;
+    const output = `<p>Passcode: <span style="user-select: none;">${passcode}</span></p><p>Key: <input type="text" value="${key}" readonly class="form-control" style="width: auto; margin: 0 auto;"></p>`;
     document.getElementById("createOutput").innerHTML = output;
   });
 }
