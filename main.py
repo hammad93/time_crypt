@@ -8,10 +8,32 @@ from dateutil.parser import parse
 import datetime
 import requests
 import base64
+import subprocess
+import os
+
+
+def version():
+    try:
+        git_dir = os.environ.get("TIME_CRYPT_DIR")
+        if git_dir:
+            commit_hash = subprocess.check_output(
+                ["git", "--git-dir", f"{git_dir}/.git", "rev-parse", "--short", "HEAD"]
+            )
+            return commit_hash.decode("utf-8").strip()
+        else:
+            print("Could'nt find environment variable TIME_CRYPT_DIRq")
+    except Exception as e:
+        print(str(e))
+    # default version if something didn't work
+    return "development"
 
 # scroll down to the bottom for initialization
 # run with `uvicorn main:app --reload --host 0.0.0.0 --port 1337`
-app = FastAPI(docs_url="/")
+app = FastAPI(docs_url="/",
+    title="time_crypt Service",
+    description="A RESTful API service to generate and unlock time-sensitive passcodes.",
+    version=version()
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,7 +46,7 @@ app.add_middleware(
 # globals
 PUBLIC_KEY = False
 PRIVATE_KEY = False
-DEFAULT_PASS = 'j5&45MZsF0v&'
+DEFAULT_PASS = os.environ.get("TIME_CRYPT_PASS", 'j5&45MZsF0v&')
 IP_TABLE = {}
 
 @app.get("/test")
