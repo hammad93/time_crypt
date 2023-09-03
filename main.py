@@ -21,7 +21,7 @@ def version():
             )
             return commit_hash.decode("utf-8").strip()
         else:
-            print("Could'nt find environment variable TIME_CRYPT_DIRq")
+            print("Could'nt find environment variable TIME_CRYPT_DIR")
     except Exception as e:
         print(str(e))
     # default version if something didn't work
