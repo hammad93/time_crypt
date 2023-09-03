@@ -12,6 +12,14 @@ import base64
 # run with `uvicorn main:app --reload --host 0.0.0.0 --port 1337`
 app = FastAPI(docs_url="/")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],  # Set the allowed origins, use ['*'] to allow all origins
+    allow_credentials=True,  # Set to True if you want to allow sending or receiving cookies
+    allow_methods=['*'],  # Set the allowed HTTP methods, use ['*'] to allow all methods
+    allow_headers=['*']  # Set the allowed HTTP headers, use ['*'] to allow all headers
+)
+
 # globals
 PUBLIC_KEY = False
 PRIVATE_KEY = False
