@@ -1,0 +1,6 @@
+fastapi
+"uvicorn[standard]"
+pgpy
+dateutil
+python-dateutil --upgrade
+requests
