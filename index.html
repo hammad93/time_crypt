@@ -59,6 +59,22 @@ function showUnlock() {
   document.getElementById("unlockDiv").style.display = "block";
 }
 
+function copyToClipboard(elementId) {
+  var copyText = document.getElementById(elementId);
+  copyText.select();
+  copyText.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+
+  // Show success message and clear button
+  const successMessage = '<p>Successfully copied to clipboard! <button onclick="clearPasscode()" class="btn btn-warning">Clear Passcode</button></p>';
+  document.getElementById("createOutput").insertAdjacentHTML('beforeend', successMessage);
+}
+
+function clearPasscode() {
+  // Clear passcode and remove success message
+  document.getElementById("createOutput").innerHTML = '';
+}
+
 function generatePasscode() {
   const expire = document.getElementById("expireDate").value;
   const url = `https://port-1337-time_crypt-hamu515426.codeanyapp.com/create?expire=${encodeURIComponent(expire)}`;
@@ -67,7 +83,7 @@ function generatePasscode() {
   .then(data => {
     const passcode = data.passcode;
     const key = data.key;
-    const output = `<p>Passcode: <span style="user-select: none;">${passcode}</span></p><p>Key: <input type="text" value="${key}" readonly class="form-control" style="width: auto; margin: 0 auto;"></p>`;
+    const output = `<p>Passcode: <span style="user-select: none;">${passcode}</span></p><p>Key: <input type="text" id="keyToCopy" value="${key}" readonly class="form-control" style="width: auto; margin: 0 auto;"><button onclick="copyToClipboard('keyToCopy')" class="btn btn-info">Copy</button></p>`;
     document.getElementById("createOutput").innerHTML = output;
   });
 }
