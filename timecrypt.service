@@ -6,7 +6,7 @@ After=network.target
 WorkingDirectory=/home/cabox/workspace/time_crypt/
 ExecStart=/home/cabox/.pyenv/shims/uvicorn main:app --reload --host 0.0.0.0 --port 1337
 Restart=always
-Environment="TIME_CRYPT_DIR=/home/cabox/workspace/time_crypt"
+Environment="KEYS_JSON=/home/keys.json"
 
 [Install]
 WantedBy=multi-user.target
