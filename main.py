@@ -6,22 +6,59 @@ from pgpy import PGPKey, PGPMessage
 import secrets
 from dateutil.parser import parse
 import datetime
+import json
 import requests
 import base64
 import subprocess
 import os
+import smtplib
+from email.message import EmailMessage
 
+def get_config(key):
+    '''
+    From the CSV credentials file, we will return the corresponding
+    value in the row where the key is found in the first column.
+    '''
+    path = os.getenv('KEYS_JSON')
+    if path :
+        with open(path, 'r') as file:
+            configs = json.load(file)
+        return configs.get(key)
+    else :
+        return None
+
+def email_key(key, expire, address):
+    '''
+    Emails the key using the SMTP credentials provided.
+    '''
+    msg = EmailMessage()
+    msg.set_content(key)
+    msg['Subject'] = f'time_cyrpt: Expires at {expire}'
+    msg['From'] = get_config('from')
+    msg['To'] = address
+    try:
+        server = smtplib.SMTP(get_config('HOST'), get_config('PORT'))
+        server.ehlo()
+        server.starttls()
+        #stmplib docs recommend calling ehlo() before & after starttls()
+        server.ehlo()
+        server.login(get_config('USERNAME_SMTP'), get_config('PASSWORD_SMTP'))
+        server.send_message(msg)
+        server.close()
+    # Display an error message if something goes wrong.
+    except Exception as e:
+        print("Error: ", e)
 
 def version():
     try:
-        git_dir = os.environ.get("TIME_CRYPT_DIR")
+        git_dir = get_config("GIT_DIR")
         if git_dir:
             commit_hash = subprocess.check_output(
                 ["git", "--git-dir", f"{git_dir}/.git", "rev-parse", "--short", "HEAD"]
             )
             return commit_hash.decode("utf-8").strip()
         else:
-            print("Could'nt find environment variable TIME_CRYPT_DIR")
+            print("Could'nt find the git directory.")
     except Exception as e:
         print(str(e))
     # default version if something didn't work
@@ -43,21 +80,22 @@ app.add_middleware(
     allow_headers=['*']  # Set the allowed HTTP headers, use ['*'] to allow all headers
 )
 
-# globals
+# globals and default configurations
 PUBLIC_KEY = False
 PRIVATE_KEY = False
-DEFAULT_PASS = os.environ.get("TIME_CRYPT_PASS", 'j5&45MZsF0v&')
-IP_TABLE = {}
+DEFAULT_PASS = get_config('TIME_CRYPT_PASS')
+if not DEFAULT_PASS : # set default password
+    DEFAULT_PASS = 'j5&45MZsF0v&'
 
 @app.get("/test")
 def hello_world():
     '''
     Please reference https://fastapi.tiangolo.com/
     '''
-    return {"Hello": "World"}
+    return "Hello, world! Please visit the /docs directory for documentation and a demo."
 
 @app.get("/create")
-def create(request: Request, expire=None, minutes=None, log=False, length=8):
+def create(request: Request, expire=None, minutes=None, email=False, length=8):
     '''
     This creates a passcode for the API. Timezone 
     will be interpreted from the IP of the request.
@@ -72,10 +110,9 @@ def create(request: Request, expire=None, minutes=None, log=False, length=8):
         user can input a length of time to create.
         The current time used will be the timetamp
         from the request.
-    log boolean
-        (Optional) Specifies if we log the passcode
-        and automatically unlock it based on the 
-        IP of the request.
+    email string
+        (Optional) This will email just the key to 
+        the provided email.
     length integer
         (Optional) By default, it is 8 but we can 
         configure the number of digits in the passcode.
@@ -95,18 +132,9 @@ def create(request: Request, expire=None, minutes=None, log=False, length=8):
     key = base64.b64encode(key).decode("ascii")
 
     # add to ip table
-    if log :
-        ip = request.client.host
-        data = {
-            "expires_at" : expire_time,
-            "key" : key
-        }
-        global IP_TABLE
-        if IP_TABLE.get(ip) :
-            IP_TABLE[ip].append(data)
-        else :
-            IP_TABLE[ip] = [data]
-
+    if email :
+        email_key(key, expire_time, email)
+    
     return {
         "passcode" : passcode,
         "expires_at" : expire_time,
