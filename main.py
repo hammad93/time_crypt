@@ -19,6 +19,8 @@ def generate_keys(key_strength = 4096, failsafe = False):
 
     Parameters
     ----------
+    key_strength int
+        The cryptographic security level in units of bits.
     failsafe bool
         The failsafe prints the private and public pgp key to the console.
         This is disabled by default because it leads to an exploit that
