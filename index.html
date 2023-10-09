@@ -75,6 +75,12 @@ function clearPasscode() {
   document.getElementById("createOutput").innerHTML = '';
 }
 
+function emailPasscode(key, expire) {
+  const subject = encodeURIComponent(`time_crypt Expiry Time: ${expire}`);
+  const body = encodeURIComponent(`${key}`);
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
 function generatePasscode() {
   const expire = document.getElementById("expireDate").value;
   const url = `https://port-1337-time_crypt-hamu515426.codeanyapp.com/create?expire=${encodeURIComponent(expire)}`;
@@ -83,7 +89,12 @@ function generatePasscode() {
   .then(data => {
     const passcode = data.passcode;
     const key = data.key;
-    const output = `<p>Passcode: <span style="user-select: none;">${passcode}</span></p><p>Key: <input type="text" id="keyToCopy" value="${key}" readonly class="form-control" style="width: auto; margin: 0 auto;"><button onclick="copyToClipboard('keyToCopy')" class="btn btn-info">Copy</button></p>`;
+    const output = `
+      <p>Passcode: <span style="user-select: none;">${passcode}</span></p>
+      <p>Key: <input type="text" id="keyToCopy" value="${key}" readonly class="form-control" style="width: auto; margin: 0 auto;"></p>
+      <button onclick="copyToClipboard('keyToCopy')" class="btn btn-info">Copy</button>
+      <button onclick="emailPasscode('${key}', '${expire}')" class="btn btn-info">Email</button>
+    `;
     document.getElementById("createOutput").innerHTML = output;
   });
 }
