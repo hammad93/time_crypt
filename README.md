@@ -16,13 +16,10 @@ The respository is where this method is defined.
 ## Endpoints
 
 ### `create`
-Generates a new passcode at the specified time by encoding the passcode and the expiry time into a new PGP message utilizing the SaaS's private key. This returns the PGP message that the user can save. Note that IP logging and unlock must be turned on.
+Generates a new passcode at the specified time by encoding the passcode and the expiry time into a new PGP message utilizing the SaaS's private key. This returns the PGP message that the user can save.
 
 ### `unlock`
 Manually check if the message generated can be unlocked based on time. If it is, return the passcode.
-
-### `ip_unlocked`
-Returns passcodes that are unlocked, or automatically decrypted based on time, by utilizing a user's internet address or IP.
 
 ### `locked`
 Returns currently locked passcodes.
@@ -102,7 +99,6 @@ This overviews how we can utilize the API in the real-world use case that the al
 
 1. Generate a new code and input lock time. 
   - Save the cryptographic message. The SaaS will save a .txt file with the message from your web browser.
-  - The application will have a setting to enable saving the passcode to your exposed IP address, it is off by default.
 2. Enter the code into your padlock(s) and lock the safe.
 3. Check the status of the lock and unlock time. All time unlocked codes will automatically be exposed.
   - To decrypt from an anonymous source, the SaaS can reads the message saved in step 1 in the `unlock` api and return the passcode if it's past the lock time.
