@@ -11,192 +11,6 @@ import requests
 import base64
 import subprocess
 import os
-import smtplib
-from email.message import EmailMessage
-
-def get_config(key):
-    '''
-    From the CSV credentials file, we will return the corresponding
-    value in the row where the key is found in the first column.
-    '''
-    path = os.getenv('KEYS_JSON')
-    if path :
-        with open(path, 'r') as file:
-            configs = json.load(file)
-        return configs.get(key)
-    else :
-        return None
-
-def email_key(key, expire, address):
-    '''
-    Emails the key using the SMTP credentials provided.
-    '''
-    msg = EmailMessage()
-    msg.set_content(key)
-    msg['Subject'] = f'time_cyrpt: Expires at {expire}'
-    msg['From'] = get_config('from')
-    msg['To'] = address
-    try:
-        server = smtplib.SMTP(get_config('HOST'), get_config('PORT'))
-        server.ehlo()
-        server.starttls()
-        #stmplib docs recommend calling ehlo() before & after starttls()
-        server.ehlo()
-        server.login(get_config('USERNAME_SMTP'), get_config('PASSWORD_SMTP'))
-        server.send_message(msg)
-        server.close()
-    # Display an error message if something goes wrong.
-    except Exception as e:
-        print("Error: ", e)
-
-def version():
-    try:
-        git_dir = get_config("GIT_DIR")
-        if git_dir:
-            commit_hash = subprocess.check_output(
-                ["git", "--git-dir", f"{git_dir}/.git", "rev-parse", "--short", "HEAD"]
-            )
-            return commit_hash.decode("utf-8").strip()
-        else:
-            print("Could'nt find the git directory.")
-    except Exception as e:
-        print(str(e))
-    # default version if something didn't work
-    return "development"
-
-# scroll down to the bottom for initialization
-# run with `uvicorn main:app --reload --host 0.0.0.0 --port 1337`
-app = FastAPI(docs_url="/",
-    title="time_crypt Service",
-    description="A RESTful API service to generate and unlock time-sensitive passcodes.",
-    version=version()
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=['*'],  # Set the allowed origins, use ['*'] to allow all origins
-    allow_credentials=True,  # Set to True if you want to allow sending or receiving cookies
-    allow_methods=['*'],  # Set the allowed HTTP methods, use ['*'] to allow all methods
-    allow_headers=['*']  # Set the allowed HTTP headers, use ['*'] to allow all headers
-)
-
-# globals and default configurations
-PUBLIC_KEY = False
-PRIVATE_KEY = False
-DEFAULT_PASS = get_config('TIME_CRYPT_PASS')
-if not DEFAULT_PASS : # set default password
-    DEFAULT_PASS = 'j5&45MZsF0v&'
-
-@app.get("/test")
-def hello_world():
-    '''
-    Please reference https://fastapi.tiangolo.com/
-    '''
-    return "Hello, world! Please visit the /docs directory for documentation and a demo."
-
-@app.get("/create")
-def create(request: Request, expire=None, minutes=None, email=False, length=8):
-    '''
-    This creates a passcode for the API. Timezone 
-    will be interpreted from the IP of the request.
-    
-    Parameters
-    ----------
-    expire string
-        A string to interpret a timestamp for when
-        the passcode should expire.
-    minutes string
-        (Optional) Alternatively to expiration, a 
-        user can input a length of time to create.
-        The current time used will be the timetamp
-        from the request.
-    email string
-        (Optional) This will email just the key to 
-        the provided email.
-    length integer
-        (Optional) By default, it is 8 but we can 
-        configure the number of digits in the passcode.
-    request Request
-        The object to access the request directly.
-    '''
-    # we construct the time data for the lock
-    if minutes : # user specifies an amount of time
-        expire_time = datetime.datetime.now() + datetime.timedelta(minutes = int(minutes))
-    else : # user specifies a time to expire
-        expire_time = parse(expire)
-    
-    # generate a passcode
-    passcode = ''.join([str(secrets.randbelow(10)) for i in range(int(length))])
-    key = lock_data(expire_time, passcode)
-    # convert to base64 to avoid encoding problems
-    key = base64.b64encode(key).decode("ascii")
-
-    # add to ip table
-    if email :
-        email_key(key, expire_time, email)
-    
-    return {
-        "passcode" : passcode,
-        "expires_at" : expire_time,
-        "key" : key
-    }
-
-def lock_data(expire_time, passcode) :
-    '''
-    Parameters
-    ----------
-    expire_time datetime
-        Will be transformed to a ISO8601 
-        timestamp and saved in the key
-        message.
-    passcode string
-        The randomly generated passcode. Please
-        do not have any spaces in the passcode.
-
-    Returns
-    -------
-    string
-        The encrypted string based on the input.
-    '''
-    data = f"{expire_time.isoformat()} {passcode}"
-    key = encrypt(data) # encrypt it using PGP
-    return key
-
-@app.get("/unlock")
-def unlock(key: str) :
-    '''
-    Based on the key returned from the create API,
-    this API unlocks it.
-
-    Parameters
-    ----------
-    key string
-        Encoded public key message with the time and
-        passcode in it.
-
-    Returns
-    -------
-    string
-        The passcode if there is one or an associated
-        error message
-    '''
-    key = base64.b64decode(key.encode("ascii"))
-    decrypted = decrypt(key).split(" ")
-    decrypted_time = decrypted[0]
-    decrypted_passcode = decrypted[1]
-    # check if it can be unlocked
-    if parse(decrypted_time) <= datetime.datetime.now() :
-        return decrypted_passcode
-    else :
-        return f"Expires on {decrypted_time}"
-
-@app.get("/ip_unlock")
-def ip_unlock(request: Request):
-    '''
-    Checks IP of request and returns the status
-    of the keys
-    '''
-    return IP_TABLE.get(request.client.host, "No IP entries found")
 
 def generate_keys(key_strength = 4096, failsafe = False):
     '''
@@ -271,5 +85,153 @@ def decrypt(message):
     print(unencrypted_string)
     return unencrypted_string
 
-# set globals
+def lock_data(expire_time, passcode) :
+    '''
+    Parameters
+    ----------
+    expire_time datetime
+        Will be transformed to a ISO8601 
+        timestamp and saved in the key
+        message.
+    passcode string
+        The randomly generated passcode. Please
+        do not have any spaces in the passcode.
+
+    Returns
+    -------
+    string
+        The encrypted string based on the input.
+    '''
+    data = f"{expire_time.isoformat()} {passcode}"
+    key = encrypt(data) # encrypt it using PGP
+    return key
+
+def get_config(key):
+    '''
+    From the CSV credentials file, we will return the corresponding
+    value in the row where the key is found in the first column.
+    '''
+    path = os.getenv('KEYS_JSON')
+    if path :
+        with open(path, 'r') as file:
+            configs = json.load(file)
+        return configs.get(key)
+    else :
+        return False
+
+def version():
+    try:
+        git_dir = get_config("GIT_DIR")
+        if git_dir:
+            commit_hash = subprocess.check_output(
+                ["git", "--git-dir", f"{git_dir}/.git", "rev-parse", "--short", "HEAD"]
+            )
+            return commit_hash.decode("utf-8").strip()
+        else:
+            print("Could'nt find the git directory.")
+    except Exception as e:
+        print(str(e))
+    # default version if something didn't work
+    return "development"
+
+# scroll down to the bottom for initialization
+# run with `uvicorn main:app --reload --host 0.0.0.0 --port 1337`
+app = FastAPI(docs_url="/",
+    title="time_crypt Service",
+    description="A RESTful API service to generate and unlock time-sensitive passcodes.",
+    version=version()
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],  # Set the allowed origins, use ['*'] to allow all origins
+    allow_credentials=True,  # Set to True if you want to allow sending or receiving cookies
+    allow_methods=['*'],  # Set the allowed HTTP methods, use ['*'] to allow all methods
+    allow_headers=['*']  # Set the allowed HTTP headers, use ['*'] to allow all headers
+)
+
+@app.get("/test")
+def hello_world():
+    '''
+    Please reference https://fastapi.tiangolo.com/
+    '''
+    return "Hello, world! Please visit the /docs directory for documentation and a demo."
+
+@app.get("/create")
+def create(request: Request, expire=None, minutes=None, length=8):
+    '''
+    This creates a passcode for the API. Timezone 
+    will be interpreted from the IP of the request.
+    
+    Parameters
+    ----------
+    expire string
+        A string to interpret a timestamp for when
+        the passcode should expire.
+    minutes string
+        (Optional) Alternatively to expiration, a 
+        user can input a length of time to create.
+        The current time used will be the timetamp
+        from the request.
+    email string
+        (Optional) This will email just the key to 
+        the provided email.
+    length integer
+        (Optional) By default, it is 8 but we can 
+        configure the number of digits in the passcode.
+    request Request
+        The object to access the request directly.
+    '''
+    # we construct the time data for the lock
+    if minutes : # user specifies an amount of time
+        expire_time = datetime.datetime.now() + datetime.timedelta(minutes = int(minutes))
+    else : # user specifies a time to expire
+        expire_time = parse(expire)
+    
+    # generate a passcode
+    passcode = ''.join([str(secrets.randbelow(10)) for i in range(int(length))])
+    key = lock_data(expire_time, passcode)
+    # convert to base64 to avoid encoding problems
+    key = base64.b64encode(key).decode("ascii")
+    
+    return {
+        "passcode" : passcode,
+        "expires_at" : expire_time,
+        "key" : key
+    }
+
+@app.get("/unlock")
+def unlock(key: str) :
+    '''
+    Based on the key returned from the create API,
+    this API unlocks it.
+
+    Parameters
+    ----------
+    key string
+        Encoded public key message with the time and
+        passcode in it.
+
+    Returns
+    -------
+    string
+        The passcode if there is one or an associated
+        error message
+    '''
+    key = base64.b64decode(key.encode("ascii"))
+    decrypted = decrypt(key).split(" ")
+    decrypted_time = decrypted[0]
+    decrypted_passcode = decrypted[1]
+    # check if it can be unlocked
+    if parse(decrypted_time) <= datetime.datetime.now() :
+        return decrypted_passcode
+    else :
+        return f"Expires on {decrypted_time}"
+
+# globals and default configurations
+PUBLIC_KEY = False
+PRIVATE_KEY = False
+DEFAULT_PASS = get_config('TIME_CRYPT_PASS')
+if not DEFAULT_PASS : # set default password
+    DEFAULT_PASS = 'j5&45MZsF0v&'
 set_keys()
