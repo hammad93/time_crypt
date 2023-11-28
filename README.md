@@ -104,3 +104,11 @@ This overviews how we can utilize the API in the real-world use case that the al
   - To decrypt from an anonymous source, the SaaS can reads the message saved in step 1 in the `unlock` api and return the passcode if it's past the lock time.
 
 Although the number of digits can be configured, the 8 digits that were meant to be "forgotten" is based on Miller's law that humans are able to remember about 7, plus or minus 2, objects in their short-term memory. 8 digits were also chosen because of the lack of availability of commerical locks and safes with more than 8 digits for their unlock combinations. 
+
+
+## User interface
+
+From the root directory,
+```
+python -m http.server
+```

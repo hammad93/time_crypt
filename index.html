@@ -34,6 +34,17 @@
       <div id="createDiv">
         <h2>Create Interface</h2>
         <input type="text" id="expireDate" class="form-control" placeholder="Enter future date" style="width: auto; margin: 0 auto;">
+        <div class="input-group mb-3" style="margin-left:40%">
+          <label class="input-group-text" for="numDigits">Passcode Length</label>
+          <select class="form-select" id="numDigits">
+            <option value="3">Three</option>
+            <option value="4">Four</option>
+            <option value="5">Five</option>
+            <option value="6">Six</option>
+            <option value="7">Seven</option>
+            <option value="8" selected>Eight</option>
+          </select>
+        </div>
         <button onclick="generatePasscode()" class="btn btn-success">Generate</button>
         <div id="createOutput"></div>
       </div>
@@ -83,7 +94,8 @@ function emailPasscode(key, expire) {
 
 function generatePasscode() {
   const expire = document.getElementById("expireDate").value;
-  const url = `https://port-1337-time_crypt-hamu515426.codeanyapp.com/create?expire=${encodeURIComponent(expire)}`;
+  const digits = document.getElementById('numDigits').selectedOptions[0].value
+  const url = `https://port-1337-time_crypt-hamu515426.codeanyapp.com/create?expire=${encodeURIComponent(expire)}&length=${digits}`;
   fetch(url)
   .then(response => response.json())
   .then(data => {
