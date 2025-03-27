@@ -5,6 +5,7 @@
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body, html {
       height: 100%;
@@ -21,7 +22,7 @@
   </style>
 </head>
 <body>
-
+<div id="reader" width="600px"></div>
 <div class="container text-center">
   <div class="row">
     <div class="col">
@@ -60,6 +61,24 @@
 </div>
 
 <script>
+//------------------------------------------------------------------------------- START QR
+function onScanSuccess(decodedText, decodedResult) {
+  // handle the scanned code as you like, for example:
+  console.log(`Code matched = ${decodedText}`, decodedResult);
+}
+
+function onScanFailure(error) {
+  // handle scan failure, usually better to ignore and keep scanning.
+  // for example:
+  console.warn(`Code scan error = ${error}`);
+}
+
+let html5QrcodeScanner = new Html5QrcodeScanner(
+  "reader",
+  { fps: 10, qrbox: {width: 250, height: 250} },
+  /* verbose= */ false);
+html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+//------------------------------------------------------------------------------- END QR
 function showCreate() {
   document.getElementById("createDiv").style.display = "block";
   document.getElementById("unlockDiv").style.display = "none";
@@ -80,7 +99,6 @@ function copyToClipboard(elementId) {
   const successMessage = '<p>Successfully copied to clipboard! <button onclick="clearPasscode()" class="btn btn-warning">Clear Passcode</button></p>';
   document.getElementById("createOutput").insertAdjacentHTML('beforeend', successMessage);
 }
-
 function clearPasscode() {
   // Clear passcode and remove success message
   document.getElementById("createOutput").innerHTML = '';

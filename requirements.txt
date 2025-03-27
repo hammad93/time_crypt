@@ -1,6 +1,5 @@
 fastapi
-"uvicorn[standard]"
+uvicorn[standard]
 pgpy
-dateutil
-python-dateutil --upgrade
+python-dateutil
 requests

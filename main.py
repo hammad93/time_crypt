@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import pgpy
+from fastapi.staticfiles import StaticFiles
 from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 from pgpy import PGPKey, PGPMessage
 import secrets
@@ -138,11 +139,14 @@ def version():
 
 # scroll down to the bottom for initialization
 # run with `uvicorn main:app --reload --host 0.0.0.0 --port 1337`
-app = FastAPI(docs_url="/",
+app = FastAPI(docs_url="/docs",
     title="time_crypt Service",
     description="A RESTful API service to generate and unlock time-sensitive passcodes.",
     version=version()
 )
+
+# Mount static directory at root
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 app.add_middleware(
     CORSMiddleware,
