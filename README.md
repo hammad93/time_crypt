@@ -3,7 +3,7 @@ A cryptographic function that enables decryption based on length of time or othe
 
 ## Link
 
-https://port-1337-time_crypt-hamu515426.codeanyapp.com/
+http://timecrypt.tplinkdns.com:31415/
 
 ## Use Case
 There is a secret you want exposed only after a certain amount of time or at an exact date and time. You do not want yourself or anyone else to know this secret until we have reached this time-based requirement.

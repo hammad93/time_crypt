@@ -3,10 +3,9 @@ Description=The SaaS for time_crypt
 After=network.target
 
 [Service]
-WorkingDirectory=/home/cabox/workspace/time_crypt/
-ExecStart=/home/cabox/.pyenv/shims/uvicorn main:app --reload --host 0.0.0.0 --port 1337
+WorkingDirectory=/home/hurricane-server/time_crypt/
+ExecStart=/home/hurricane-server/time_crypt/venv/bin/uvicorn main:app --reload --host 0.0.0.0 --port 31415
 Restart=always
-Environment="KEYS_JSON=/home/keys.json"
 
 [Install]
 WantedBy=multi-user.target
