@@ -1,10 +1,6 @@
 # time_crypt
 A cryptographic function that enables decryption based on length of time or other specified time.
 
-## Link
-
-http://timecrypt.tplinkdns.com:31415/
-
 ## Use Case
 There is a secret you want exposed only after a certain amount of time or at an exact date and time. You do not want yourself or anyone else to know this secret until we have reached this time-based requirement.
 
