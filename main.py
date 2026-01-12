@@ -11,6 +11,8 @@ import requests
 import base64
 import subprocess
 import os
+import random
+import string
 
 def generate_keys(key_strength = 4096, failsafe = False):
     '''
@@ -39,15 +41,19 @@ def generate_keys(key_strength = 4096, failsafe = False):
         compression=[CompressionAlgorithm.ZLIB, CompressionAlgorithm.BZ2, CompressionAlgorithm.ZIP, CompressionAlgorithm.Uncompressed])
 
     # password protect private key
-    key.protect(DEFAULT_PASS, SymmetricKeyAlgorithm.AES256, HashAlgorithm.SHA256)
+    private_key_pass = get_config('TIME_CRYPT_PASS')
+    if not private_key_pass : # set default password
+        private_key_pass = generate_random_string()
+    key.protect(private_key_pass, SymmetricKeyAlgorithm.AES256, HashAlgorithm.SHA256)
 
     # private and public key
     private_key = str(key)
     public_key = str(key.pubkey)
 
     if failsafe :
-        print(private_key)
-        print(public_key)
+        print("PGP Private Key:\n", private_key)
+        print("PGP Private Key Password:\n", private_key_pass)
+        print("PGP Public Key:\n", public_key)
 
     return {
         'public_key' : public_key,
@@ -130,7 +136,7 @@ def version():
             )
             return commit_hash.decode("utf-8").strip()
         else:
-            print("Could'nt find the git directory.")
+            print("The git directory is not configured.")
     except Exception as e:
         print(str(e))
     # default version if something didn't work
@@ -230,10 +236,13 @@ def unlock(key: str) :
     else :
         return f"Expires on {decrypted_time}"
 
+def generate_random_string(min_length=15, max_length=60):
+    length = random.randint(min_length, max_length)
+    characters = string.ascii_letters + string.digits
+    random_string = ''.join(random.choice(characters) for _ in range(length))
+    return random_string
+
 # globals and default configurations
 PUBLIC_KEY = False
 PRIVATE_KEY = False
-DEFAULT_PASS = get_config('TIME_CRYPT_PASS')
-if not DEFAULT_PASS : # set default password
-    DEFAULT_PASS = 'j5&45MZsF0v&'
 set_keys()
