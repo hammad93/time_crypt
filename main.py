@@ -41,10 +41,7 @@ def generate_keys(key_strength = 4096, failsafe = False):
         compression=[CompressionAlgorithm.ZLIB, CompressionAlgorithm.BZ2, CompressionAlgorithm.ZIP, CompressionAlgorithm.Uncompressed])
 
     # password protect private key
-    private_key_pass = get_config('TIME_CRYPT_PASS')
-    if not private_key_pass : # set default password
-        private_key_pass = generate_random_string()
-    key.protect(private_key_pass, SymmetricKeyAlgorithm.AES256, HashAlgorithm.SHA256)
+    key.protect(PRIVATE_KEY_PASS, SymmetricKeyAlgorithm.AES256, HashAlgorithm.SHA256)
 
     # private and public key
     private_key = str(key)
@@ -87,7 +84,7 @@ def decrypt(message):
     '''
     # decrypt using private key
     private_key_test = PGPKey.from_blob(PRIVATE_KEY)[0] # reads in from string format
-    with private_key_test.unlock(DEFAULT_PASS) as unlocked_private_key :
+    with private_key_test.unlock(PRIVATE_KEY_PASS) as unlocked_private_key :
         result = unlocked_private_key.decrypt(PGPMessage.from_blob(message))
     unencrypted_string = result.message
     print(unencrypted_string)
@@ -245,4 +242,7 @@ def generate_random_string(min_length=15, max_length=60):
 # globals and default configurations
 PUBLIC_KEY = False
 PRIVATE_KEY = False
+PRIVATE_KEY_PASS = get_config('TIME_CRYPT_PASS')
+if not PRIVATE_KEY_PASS:
+    PRIVATE_KEY_PASS = generate_random_string()
 set_keys()
