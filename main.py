@@ -13,6 +13,7 @@ import subprocess
 import os
 import random
 import string
+import ntplib
 
 def generate_keys(key_strength = 4096, failsafe = False):
     '''
