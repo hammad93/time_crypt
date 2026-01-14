@@ -29,7 +29,24 @@ fastapi
 pgpy
 python-dateutil --upgrade
 requests
+ntlib
 ```
+
+## Configuration
+A configuration file can be set by defining the path of a JSON file as an environment variable called `KEYS_JSON`. If it's not set, all these parameters are assumed to be False. This can have the following parameters:
+
+- `OFFLINE`: If True, it won't utilize the NTP servers and instead utilize the system time.
+- `GIT_DIR`: The directory where the source is located to better define version.
+- `TIME_CRYPT_PASS`: Manualy set the passcode for the PGP private key. Otherwise, it will be randomly generated.
+
+Example:
+
+```json
+{
+  "OFFLINE": true
+}
+```
+
 <h2>Setting up timecrypt.service in Ubuntu</h2>
 
 <h3>1. Save the Service File</h3>
