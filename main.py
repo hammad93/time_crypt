@@ -166,7 +166,10 @@ def hello_world():
 def create(request: Request, expire=None, minutes=None, length=8, utc_offset=-5):
     '''
     This creates a passcode for the API. Timezone 
-    will be interpreted from the IP of the request.
+    can be specified by including it in the expiry
+    parameter. The utc_offset is based on time_crypt
+    deployments usually in eastern time, so adjust
+    as needed.
     
     Parameters
     ----------
@@ -195,8 +198,9 @@ def create(request: Request, expire=None, minutes=None, length=8, utc_offset=-5)
         expire_time = datetime.datetime.now() + datetime.timedelta(minutes = int(minutes))
     else : # user specifies a time to expire
         expire_time = parse(expire)
-    # set timezone
-    expiry_time = expire_time.replace(
+    # set timezone if not specified in expire string or if minutes are passed
+    if expiry_time.tzinfo is None:
+        expiry_time = expire_time.replace(
             tzinfo=datetime.timezone(datetime.timedelta(hours=utc_offset)))
     
     # generate a passcode
@@ -233,7 +237,8 @@ def unlock(key: str) :
     decrypted = decrypt(key).split(" ")
     decrypted_time = decrypted[0]
     decrypted_passcode = decrypted[1]
-    # check if it can be unlocked
+    # check if it can be unlocked. both should be timezone-aware
+    # note that python converts these times to UTC internally for comparison automatically
     if parse(decrypted_time) <= timestamp() :
         return decrypted_passcode
     else :
