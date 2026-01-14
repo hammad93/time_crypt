@@ -163,7 +163,7 @@ def hello_world():
     return "Hello, world! Please visit the /docs directory for documentation and a demo."
 
 @app.get("/create")
-def create(request: Request, expire=None, minutes=None, length=8):
+def create(request: Request, expire=None, minutes=None, length=8, utc_offset=-5):
     '''
     This creates a passcode for the API. Timezone 
     will be interpreted from the IP of the request.
@@ -184,6 +184,9 @@ def create(request: Request, expire=None, minutes=None, length=8):
     length integer
         (Optional) By default, it is 8 but we can 
         configure the number of digits in the passcode.
+    utc_offset integer
+        (Optional) The UTC offset to create the time
+        aware expiration. By default, it's set to ET
     request Request
         The object to access the request directly.
     '''
@@ -192,6 +195,9 @@ def create(request: Request, expire=None, minutes=None, length=8):
         expire_time = datetime.datetime.now() + datetime.timedelta(minutes = int(minutes))
     else : # user specifies a time to expire
         expire_time = parse(expire)
+    # set timezone
+    expiry_time = expire_time.replace(
+            tzinfo=datetime.timezone(datetime.timedelta(hours=utc_offset)))
     
     # generate a passcode
     passcode = ''.join([str(secrets.randbelow(10)) for i in range(int(length))])
@@ -228,7 +234,7 @@ def unlock(key: str) :
     decrypted_time = decrypted[0]
     decrypted_passcode = decrypted[1]
     # check if it can be unlocked
-    if parse(decrypted_time) <= datetime.datetime.now() :
+    if parse(decrypted_time) <= timestamp() :
         return decrypted_passcode
     else :
         return f"Expires on {decrypted_time}"
@@ -238,6 +244,27 @@ def generate_random_string(min_length=15, max_length=60):
     characters = string.ascii_letters + string.digits
     random_string = ''.join(random.choice(characters) for _ in range(length))
     return random_string
+
+def timestamp(ntp_server='pool.ntp.org', time_zone=datetime.timezone.utc):
+    '''
+    Gets the current time from NTP server or from system if OFFLINE parameter set
+
+    Parameters
+    ----------
+    ntp_server str
+        The URL for the NTP server. Note that the function utilizes version 3 for max
+        compatibility
+    time_zone datetime.datetime.tz
+        The timezone in a datetime object for the ntp_server URL. While many NTP 
+        servers return the time in UTC, some do it in their local time
+    '''
+    # use system time if on offline mode, otherwise use NTP server
+    if get_config('OFFLINE'):
+        return datetime.datetime.now()
+    else: # get time from NTP server
+        client = ntplib.NTPClient()
+        current_time = client.request(ntp_server, version=3).tx_time # unix format
+        return datetime.datetime.fromtimestamp(current_time, time_zone)
 
 # globals and default configurations
 PUBLIC_KEY = False
