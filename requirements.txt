@@ -4,3 +4,4 @@ pgpy
 dateutil
 python-dateutil --upgrade
 requests
+ntplib
