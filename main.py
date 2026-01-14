@@ -201,7 +201,7 @@ def create(request: Request, expire=None, minutes=None, length=8, utc_offset=-5)
     # set timezone if not specified in expire string or if minutes are passed
     if expire_time.tzinfo is None:
         expire_time = expire_time.replace(
-            tzinfo=datetime.timezone(datetime.timedelta(hours=utc_offset)))
+            tzinfo=datetime.timezone(datetime.timedelta(hours=int(utc_offset))))
     
     # generate a passcode
     passcode = ''.join([str(secrets.randbelow(10)) for i in range(int(length))])
