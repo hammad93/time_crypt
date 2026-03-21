@@ -6,6 +6,7 @@ from pgpy import PGPKey, PGPMessage
 import secrets
 from dateutil.parser import parse
 import datetime
+import time
 import json
 import requests
 import base64
@@ -74,19 +75,60 @@ def encrypt(message):
     '''
     Encrypts the message using the global public key
     '''
-    message = pgpy.PGPMessage.new(message)
-    encrypted_string = bytes(PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(message))
-    return encrypted_string
+    key = pgpy.PGPMessage.new(message)
+    encrypted_string = PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(key)
+    
+    if get_config('DRAND'):
+        # TODO
+        filename = f'data_{time.time()}.txt'
+        expire = datetime.datetime.fromisoformat(message.split(' ')[0])
+        diff = (expire - datetime.datetime.now(datetime.timezone.utc)).total_seconds()
+        with open(filename, 'w') as f:
+            f.write(str(encrypted_string))
+        # calculate difference in milliseconds (ms)
+        command =[get_config("TLE_PATH"), '--encrypt', '-D', f'{int(diff)}s', '-o',
+            f'tlock_{filename}', filename]
+        print(command)
+        subprocess.run(command)
+        with open(f'tlock_{filename}', 'rb') as f:
+            data = f.read()
+        # cleanup
+        os.remove(filename)
+        os.remove(f'tlock_{filename}')
+        return data
+    else:
+        return bytes(encrypted_string)
 
 def decrypt(message):
     '''
     Given a PGP message, this function will try to decrypt
     based on the private key global variable
     '''
+    print('decrypting . . .')
     # decrypt using private key
     private_key_test = PGPKey.from_blob(PRIVATE_KEY)[0] # reads in from string format
     with private_key_test.unlock(PRIVATE_KEY_PASS) as unlocked_private_key :
-        result = unlocked_private_key.decrypt(PGPMessage.from_blob(message))
+        if get_config('DRAND'):
+            # TODO
+            prefix = str(time.time())
+            with open(f'{prefix}_tlock.txt', 'wb') as f:
+                print(message)
+                f.write(message)
+            tle_output = subprocess.run(['tle', '-d', '-o',
+                            f'{prefix}_out.txt', f'{prefix}_tlock.txt'],
+                            capture_output=True,
+                            text=True)
+            with open(f'{prefix}_out.txt') as f:
+                data = f.read()
+                print(data)
+            # finalize
+            os.remove(f'{prefix}_tlock.txt')
+            os.remove(f'{prefix}_out.txt')
+            if 'too early' in tle_output.stderr:
+                return tle_output.stderr
+            result = unlocked_private_key.decrypt(PGPMessage.from_blob(data))
+        else:
+            result = unlocked_private_key.decrypt(PGPMessage.from_blob(message))
     unencrypted_string = result.message
     print(unencrypted_string)
     return unencrypted_string
@@ -196,7 +238,7 @@ def create(request: Request, expire=None, minutes=None, length=8, utc_offset=-5)
     '''
     # we construct the time data for the lock
     if minutes : # user specifies an amount of time
-        expire_time = datetime.datetime.now() + datetime.timedelta(minutes = int(minutes))
+        expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes = int(minutes))
     else : # user specifies a time to expire
         expire_time = parse(expire)
     # set timezone if not specified in expire string or if minutes are passed
@@ -224,7 +266,7 @@ def unlock(key: str) :
 
     Parameters
     ----------
-    key string
+    key( string
         Encoded public key message with the time and
         passcode in it.
 
@@ -235,6 +277,9 @@ def unlock(key: str) :
         error message
     '''
     key = base64.b64decode(key.encode("ascii"))
+    decrypted = decrypt(key)
+    if 'too early' in decrypted: # when utilizing tlock drand
+        return decrypted
     decrypted = decrypt(key).split(" ")
     decrypted_time = decrypted[0]
     decrypted_passcode = decrypted[1]

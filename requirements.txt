@@ -1,7 +1,6 @@
 fastapi
 uvicorn[standard]
 pgpy
-dateutil
-python-dateutil --upgrade
+python-dateutil
 requests
 ntplib
