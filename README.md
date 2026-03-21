@@ -1,49 +1,68 @@
 # time_crypt
 A cryptographic function that enables decryption based on length of time or other specified time.
 
+## Table of Contents
+
+1. [Use Case](#use-case)
+2. [Endpoints](#endpoints)
+3. [Install](#install)
+4. [Configuration](#configuration)
+5. [Quickstart](#quickstart)
+6. [User Interface](#user-interface)
+
 ## Use Case
 There is a secret you want exposed only after a certain amount of time or at an exact date and time. You do not want yourself or anyone else to know this secret until we have reached this time-based requirement.
 
-## Method
-We create a web based SaaS where we create a public and private key. Secrets are encrypted and the SaaS decrypts it based on stored private key as well as the valid timestamp.
-
-The respository is where this method is defined.
-
 ## Endpoints
 
+### `test`
+A test of the HTTP server.
+
 ### `create`
-Generates a new passcode at the specified time by encoding the passcode and the expiry time into a new PGP message utilizing the SaaS's private key. This returns the PGP message that the user can save.
+Generates a new passcode at the specified time by encoding the passcode and the expiry time into a new PGP message utilizing the SaaS's private key. This returns a self-expiring key that the user can save.
 
 ### `unlock`
-Manually check if the message generated can be unlocked based on time. If it is, return the passcode.
-
-### `locked`
-Returns currently locked passcodes.
+Decrypt the key and validating if the message generated can be unlocked based on time. If it is, return the passcode.
 
 ## Install
-The software runs on Python 3. We can install all libraries by running the command `pip install` and then the library, e.g. `pip install fastapi` and then `pip install "uvicorn[standard]"`, etc.  
 
-```requirements
+- The software runs on Python 3. We can install all libraries by running the command `pip install` and then the library, e.g. `pip install fastapi` and then `pip install "uvicorn[standard]"`, etc.  
+- If configured to utilize decentralized encryption, please install Go and the [tlock dependency](https://github.com/drand/tlock).
+
+
+### Python
+
+This overviews the packages required with Python. Please reference the `requirements.txt` for the most up-to-date details.
+
+```
 fastapi
-"uvicorn[standard]"
+uvicorn[standard]
 pgpy
-python-dateutil --upgrade
+python-dateutil
 requests
-ntlib
+ntplib
 ```
 
 ## Configuration
 A configuration file can be set by defining the path of a JSON file as an environment variable called `KEYS_JSON`. If it's not set, all these parameters are assumed to be False. This can have the following parameters:
 
-- `OFFLINE`: If True, it won't utilize the NTP servers and instead utilize the system time. Note that offline mode can be exploited by changing system time with root access.
+- `OFFLINE`: If true, it won't utilize the NTP servers and instead utilize the system time. Note that offline mode can be exploited by changing system time with root access.
 - `GIT_DIR`: The directory where the source is located to better define version.
 - `TIME_CRYPT_PASS`: Manualy set the passcode for the PGP private key. Otherwise, it will be randomly generated. Note that this can be utilized as a failsafe because root access can get the PGP keys with a memory dump with relative ease.
+- `DRAND`: When set to true, this informs the API to utilize drand tlock (distributed randomness time lock). The PGP message is sent to the distributed network with a calculated expiration duration. 
+- `TLE_PATH`: The path of the tle (https://github.com/drand/tlock) Go binary. Required only with the `DRAND` variable and accessed to pass commands with Python's subprocess module.
 
-Example:
+Examples:
 
 ```json
 {
   "OFFLINE": true
+}
+```
+```json
+{
+ "DRAND": true,
+ "TLE_PATH": "/home/user/go/bin/tle"
 }
 ```
 

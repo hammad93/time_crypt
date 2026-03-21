@@ -78,8 +78,8 @@ def encrypt(message):
     key = pgpy.PGPMessage.new(message)
     encrypted_string = PGPKey.from_blob(PUBLIC_KEY)[0].encrypt(key)
     
+    # if configured, decentralized encryption is performed
     if get_config('DRAND'):
-        # TODO
         filename = f'data_{time.time()}.txt'
         expire = datetime.datetime.fromisoformat(message.split(' ')[0])
         diff = (expire - datetime.datetime.now(datetime.timezone.utc)).total_seconds()
@@ -108,11 +108,10 @@ def decrypt(message):
     # decrypt using private key
     private_key_test = PGPKey.from_blob(PRIVATE_KEY)[0] # reads in from string format
     with private_key_test.unlock(PRIVATE_KEY_PASS) as unlocked_private_key :
+        # configuration for decentralized encryption
         if get_config('DRAND'):
-            # TODO
             prefix = str(time.time())
             with open(f'{prefix}_tlock.txt', 'wb') as f:
-                print(message)
                 f.write(message)
             tle_output = subprocess.run(['tle', '-d', '-o',
                             f'{prefix}_out.txt', f'{prefix}_tlock.txt'],
@@ -120,7 +119,6 @@ def decrypt(message):
                             text=True)
             with open(f'{prefix}_out.txt') as f:
                 data = f.read()
-                print(data)
             # finalize
             os.remove(f'{prefix}_tlock.txt')
             os.remove(f'{prefix}_out.txt')
@@ -130,7 +128,6 @@ def decrypt(message):
         else:
             result = unlocked_private_key.decrypt(PGPMessage.from_blob(message))
     unencrypted_string = result.message
-    print(unencrypted_string)
     return unencrypted_string
 
 def lock_data(expire_time, passcode) :
