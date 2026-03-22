@@ -113,7 +113,7 @@ def decrypt(message):
             prefix = str(time.time())
             with open(f'{prefix}_tlock.txt', 'wb') as f:
                 f.write(message)
-            tle_output = subprocess.run(['tle', '-d', '-o',
+            tle_output = subprocess.run([get_config('TLE_PATH'), '-d', '-o',
                             f'{prefix}_out.txt', f'{prefix}_tlock.txt'],
                             capture_output=True,
                             text=True)
