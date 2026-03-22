@@ -68,7 +68,7 @@ Examples:
 
 ## Quickstart
 
-`nohup uvicorn main:app --host 0.0.0.0 --port 1337 > logs.txt &`
+`nohup uvicorn main:app --host 0.0.0.0 --port 31415 > logs.txt &`
 
 <h2>Setting up timecrypt.service in Ubuntu</h2>
 
@@ -82,8 +82,9 @@ After=network.target
 
 [Service]
 WorkingDirectory=/git/clone/path/time_crypt/
-ExecStart=/which/uvicorn main:app --reload --host 0.0.0.0 --port 1337
+ExecStart=/which/uvicorn main:app --reload --host 0.0.0.0 --port 31415
 Restart=always
+Environment="KEYS_JSON=/path/to/keys.json"
 
 [Install]
 WantedBy=multi-user.target
