@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 import pgpy
 from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 from pgpy import PGPKey, PGPMessage
@@ -15,6 +16,7 @@ import os
 import random
 import string
 import ntplib
+import traceback
 
 def generate_keys(key_strength = 4096, failsafe = False):
     '''
@@ -273,19 +275,24 @@ def unlock(key: str) :
         The passcode if there is one or an associated
         error message
     '''
-    key = base64.b64decode(key.encode("ascii"))
-    decrypted = decrypt(key)
-    if 'too early' in decrypted: # when utilizing tlock drand
-        return decrypted
-    decrypted = decrypt(key).split(" ")
-    decrypted_time = decrypted[0]
-    decrypted_passcode = decrypted[1]
-    # check if it can be unlocked. both should be timezone-aware
-    # note that python converts these times to UTC internally for comparison automatically
-    if parse(decrypted_time) <= timestamp() :
-        return decrypted_passcode
-    else :
-        return f"Expires on {decrypted_time}"
+    try:
+        key = base64.b64decode(key.encode("ascii"))
+        decrypted = decrypt(key)
+        if 'too early' in decrypted: # when utilizing tlock drand
+            return decrypted
+        decrypted = decrypt(key).split(" ")
+        decrypted_time = decrypted[0]
+        decrypted_passcode = decrypted[1]
+        # check if it can be unlocked. both should be timezone-aware
+        # note that python converts these times to UTC internally for comparison automatically
+        if parse(decrypted_time) <= timestamp() :
+            return decrypted_passcode
+        else :
+            return f"Expires on {decrypted_time}"
+    except Exception as e:
+        trace = traceback.format_exc()
+        # return error message
+        return PlainTextResponse(f'{trace}\n{e}')
 
 def generate_random_string(min_length=15, max_length=60):
     length = random.randint(min_length, max_length)
