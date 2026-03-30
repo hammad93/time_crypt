@@ -7,6 +7,7 @@ from pgpy import PGPKey, PGPMessage
 import secrets
 from dateutil.parser import parse
 import datetime
+import zoneinfo
 import time
 import json
 import requests
@@ -205,7 +206,7 @@ def hello_world():
     return "Hello, world! Please visit the /docs directory for documentation and a demo."
 
 @app.get("/create")
-def create(request: Request, expire=None, minutes=None, length=8, utc_offset=-5):
+def create(request: Request, expire=None, minutes=None, length=8, utc_offset='America/New_York'):
     '''
     This creates a passcode for the API. Timezone 
     can be specified by including it in the expiry
@@ -213,37 +214,42 @@ def create(request: Request, expire=None, minutes=None, length=8, utc_offset=-5)
     deployments usually in eastern time, so adjust
     as needed.
     
-    Parameters
-    ----------
-    expire string
-        A string to interpret a timestamp for when
-        the passcode should expire.
-    minutes string
-        (Optional) Alternatively to expiration, a 
+    ## Parameters
+    
+    **expire** string
+    - A string to interpret a timestamp for when the passcode should expire.
+    
+    **minutes** string
+    - (Optional) Alternatively to expiration, a 
         user can input a length of time to create.
         The current time used will be the timetamp
         from the request.
-    email string
-        (Optional) This will email just the key to 
-        the provided email.
-    length integer
-        (Optional) By default, it is 8 but we can 
+        
+    **length** integer
+    - By default, it is 8 but we can 
         configure the number of digits in the passcode.
-    utc_offset integer
-        (Optional) The UTC offset to create the time
-        aware expiration. By default, it's set to ET
-    request Request
-        The object to access the request directly.
+    
+    **utc_offset** integer/string
+     - The UTC offset to create the time
+        aware expiration. Values can be negative,
+        e.g. EDT value as integer is -4
+    - Reference this site for available strings to set
+    the time zone:
+    https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
     '''
     # we construct the time data for the lock
     if minutes : # user specifies an amount of time
-        expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes = int(minutes))
+        expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes = float(minutes))
     else : # user specifies a time to expire
         expire_time = parse(expire)
     # set timezone if not specified in expire string or if minutes are passed
     if expire_time.tzinfo is None:
-        expire_time = expire_time.replace(
-            tzinfo=datetime.timezone(datetime.timedelta(hours=int(utc_offset))))
+        try: # try if offset is an integer
+            expire_time = expire_time.replace(
+                tzinfo=datetime.timezone(datetime.timedelta(hours=int(utc_offset))))
+        except: # checks if it's a string time zone instead
+            expire_time = expire_time.replace(
+                tzinfo=zoneinfo.ZoneInfo(utc_offset))
     
     # generate a passcode
     passcode = ''.join([str(secrets.randbelow(10)) for i in range(int(length))])
@@ -263,17 +269,15 @@ def unlock(key: str) :
     Based on the key returned from the create API,
     this API unlocks it.
 
-    Parameters
-    ----------
-    key( string
-        Encoded public key message with the time and
-        passcode in it.
+    ## Parameters
+    **key** string
+    - Encoded public key message with the time and
+    - passcode in it.
 
-    Returns
-    -------
+    ## Returns
     string
-        The passcode if there is one or an associated
-        error message
+    - The passcode if there is one or an associated
+    - error message
     '''
     try:
         key = base64.b64decode(key.encode("ascii"))
