@@ -169,14 +169,16 @@ def get_config(key):
 
 def version():
     try:
-        git_dir = get_config("GIT_DIR")
-        if git_dir:
-            commit_hash = subprocess.check_output(
-                ["git", "--git-dir", f"{git_dir}/.git", "rev-parse", "--short", "HEAD"]
-            )
-            return commit_hash.decode("utf-8").strip()
-        else:
-            print("The git directory is not configured.")
+        git_log = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                '.git',
+                'logs',
+                'HEAD'
+        )
+        with open(git_log) as f:
+            log_data = f.readlines()
+        current_version = log_data[-1].split(" ")[1]
+        return current_version
     except Exception as e:
         print(str(e))
     # default version if something didn't work

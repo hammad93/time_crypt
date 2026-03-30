@@ -47,7 +47,6 @@ ntplib
 A configuration file can be set by defining the path of a JSON file as an environment variable called `KEYS_JSON`. If it's not set, all these parameters are assumed to be False. This can have the following parameters:
 
 - `OFFLINE`: If true, it won't utilize the NTP servers and instead utilize the system time. Note that offline mode can be exploited by changing system time with root access.
-- `GIT_DIR`: The directory where the source is located to better define version.
 - `TIME_CRYPT_PASS`: Manualy set the passcode for the PGP private key. Otherwise, it will be randomly generated. Note that this can be utilized as a failsafe because root access can get the PGP keys with a memory dump with relative ease.
 - `DRAND`: When set to true, this informs the API to utilize drand tlock (distributed randomness time lock). The PGP message is sent to the distributed network with a calculated expiration duration. 
 - `TLE_PATH`: The path of the tle (https://github.com/drand/tlock) Go binary. Required only with the `DRAND` variable and accessed to pass commands with Python's subprocess module.
