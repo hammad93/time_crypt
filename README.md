@@ -3,12 +3,27 @@ A cryptographic function that enables decryption based on length of time or othe
 
 ## Table of Contents
 
-1. [Use Case](#use-case)
-2. [Endpoints](#endpoints)
-3. [Install](#install)
-4. [Configuration](#configuration)
-5. [Quickstart](#quickstart)
-6. [User Interface](#user-interface)
+- [Use Case](#use-case)  
+- [Endpoints](#endpoints)  
+  - [`test`](#test)  
+  - [`create`](#create)  
+  - [`unlock`](#unlock)  
+- [Quick Install](#quick-install)  
+  - [Python](#python)  
+- [Configuration](#configuration)  
+- [Production Install](#production-install)  
+  - [Setting up timecrypt.service in Ubuntu](#setting-up-timecryptservice-in-ubuntu)  
+    - [1. Save the Service File](#1-save-the-service-file)  
+    - [2. Move the Service File to systemd Directory](#2-move-the-service-file-to-systemd-directory)  
+    - [3. Ensure Uvicorn is Accessible](#3-ensure-uvicorn-is-accessible)  
+    - [4. Reload systemd](#4-reload-systemd)  
+    - [5. Start and Enable the Service](#5-start-and-enable-the-service)  
+    - [6. Check the Service Status](#6-check-the-service-status)  
+  - [Maintaining Uptime](#maintaining-uptime)  
+- [Notes](#notes)  
+- [Quickstart](#quickstart)  
+- [User interface](#user-interface)
+
 
 ## Use Case
 There is a secret you want exposed only after a certain amount of time or at an exact date and time. You do not want yourself or anyone else to know this secret until we have reached this time-based requirement.
@@ -24,7 +39,7 @@ Generates a new passcode at the specified time by encoding the passcode and the 
 ### `unlock`
 Decrypt the key and validating if the message generated can be unlocked based on time. If it is, return the passcode.
 
-## Install
+## Quick Install
 
 - The software runs on Python 3. We can install all libraries by running the command `pip install` and then the library, e.g. `pip install fastapi` and then `pip install "uvicorn[standard]"`, etc.  
 - If configured to utilize decentralized encryption, please install Go and the [tlock dependency](https://github.com/drand/tlock).
@@ -65,16 +80,16 @@ Examples:
 }
 ```
 
-## Quickstart
+## Production Install
 
 `nohup uvicorn main:app --host 0.0.0.0 --port 31415 > logs.txt &`
 
-<h2>Setting up timecrypt.service in Ubuntu</h2>
+### Setting up timecrypt.service in Ubuntu
 
-<h3>1. Save the Service File</h3>
-<p>If you haven't already, save the content below to a file named <code>timecrypt.service</code>.</p>
+#### 1. Save the Service File
+If you haven't already, save the content below to a file named `timecrypt.service`.
 
-<pre>
+```
 [Unit]
 Description=The SaaS for time_crypt
 After=network.target
@@ -87,46 +102,53 @@ Environment="KEYS_JSON=/path/to/keys.json"
 
 [Install]
 WantedBy=multi-user.target
-</pre>
+```
 
-<h3>2. Move the Service File to systemd Directory</h3>
-<pre>
+#### 2. Move the Service File to systemd Directory
+```
 sudo cp timecrypt.service /etc/systemd/system/
-</pre>
+```
 
-<h3>3. Ensure Uvicorn is Accessible</h3>
-<p>If you installed Uvicorn using pip, you can find its path with:</p>
-<pre>
+#### 3. Ensure Uvicorn is Accessible
+
+If you installed Uvicorn using pip, you can find its path with:
+
+```
 which uvicorn
-</pre>
-<p>If a path is returned, it's globally accessible. Otherwise, adjust your PATH variable or provide the full path in the service file.</p>
+```
 
-<h3>4. Reload systemd</h3>
-<pre>
+If a path is returned, it's globally accessible. Otherwise, adjust your PATH variable or provide the full path in the service file.
+
+#### 4. Reload systemd
+```
 sudo systemctl daemon-reload
-</pre>
+```
 
-<h3>5. Start and Enable the Service</h3>
-<p>Start the service:</p>
-<pre>
+#### 5. Start and Enable the Service
+Start the service:
+```
 sudo systemctl start timecrypt.service
-</pre>
-<p>Enable the service to start on boot:</p>
-<pre>
+```
+Enable the service to start on boot:
+```
 sudo systemctl enable timecrypt.service
-</pre>
+```
 
-<h3>6. Check the Service Status</h3>
-<p>To ensure your service has started successfully and to view its logs, use:</p>
-<pre>
+#### 6. Check the Service Status
+To ensure your service has started successfully and to view its logs, use:
+```
 sudo systemctl status timecrypt.service
-</pre>
+```
 
-<h3>Notes:</h3>
-<ul>
-<li>For a production deployment, consider removing the <code>--reload</code> flag in the <code>ExecStart</code> command. The reload flag is more suited for development as it restarts the server when code changes are detected.</li>
-<li>If you face any errors or the service doesn't start, follow diagnostic steps to check and debug any issues.</li>
-</ul>
+### Maintaining Uptime
+
+In highly secure configurations, if the process stops, the private key is lost. To maintain the uptime of `timecrypt`, a system service is created. There are still other factors to consider,
+- Unattended upgrades by _systemd_. Consider editing the `/etc/apt/apt.conf.d/50unattended-upgrades` to include `timecrypt` in the `Unattended-Upgrade::Package-Blacklist`.
+
+### Notes
+
+- For a production deployment, consider removing the `--reload` flag in the `ExecStart` command. The reload flag is more suited for development as it restarts the server when code changes are detected.
+- If you face any errors or the service doesn't start, follow diagnostic steps to check and debug any issues.
 
 
 ## Quickstart
