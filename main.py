@@ -19,6 +19,7 @@ import string
 import ntplib
 import traceback
 
+
 def generate_keys(key_strength = 4096, failsafe = False):
     '''
     This function creates a public and private key based on PGP
@@ -54,7 +55,7 @@ def generate_keys(key_strength = 4096, failsafe = False):
 
     if failsafe :
         print("PGP Private Key:\n", private_key)
-        print("PGP Private Key Password:\n", private_key_pass)
+        print("PGP Private Key Password:\n", PRIVATE_KEY_PASS)
         print("PGP Public Key:\n", public_key)
 
     return {
@@ -69,7 +70,7 @@ def set_keys():
     global PUBLIC_KEY
     global PRIVATE_KEY
 
-    keys = generate_keys()
+    keys = generate_keys(failsafe=get_config('FAILSAFE'))
 
     PUBLIC_KEY = keys['public_key']
     PRIVATE_KEY = keys['private_key']
@@ -163,7 +164,7 @@ def get_config(key):
     if path :
         with open(path, 'r') as file:
             configs = json.load(file)
-        return configs.get(key)
+        return configs.get(key, False)
     else :
         return False
 
@@ -327,6 +328,7 @@ def timestamp(ntp_server='pool.ntp.org', time_zone=datetime.timezone.utc):
         current_time = client.request(ntp_server, version=3).tx_time # unix format
         return datetime.datetime.fromtimestamp(current_time, time_zone)
 
+
 # globals and default configurations
 PUBLIC_KEY = False
 PRIVATE_KEY = False
@@ -334,3 +336,5 @@ PRIVATE_KEY_PASS = get_config('TIME_CRYPT_PASS')
 if not PRIVATE_KEY_PASS:
     PRIVATE_KEY_PASS = generate_random_string()
 set_keys()
+print(f"time_crypt initialized at {datetime.datetime.now()}")
+

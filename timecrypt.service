@@ -3,10 +3,12 @@ Description=The SaaS for time_crypt
 After=network.target
 
 [Service]
-WorkingDirectory=/home/user/time_crypt/
-ExecStart=/home/hammad/user/venv/bin/uvicorn main:app --host 0.0.0.0 --port 31415
+WorkingDirectory=/path/to/time_crypt/
+ExecStart=/path/to/time_crypt/venv/bin/uvicorn main:app --host 0.0.0.0 --port 31415
 Restart=always
-Environment="KEYS_JSON=/home/user/time_crypt/keys.json"
+Environment="KEYS_JSON=/path/to/time_crypt/keys.json"
+StandardOutput=append:/path/to/time_crypt/logs.txt
+StandardError=inherit
 
 [Install]
 WantedBy=multi-user.target

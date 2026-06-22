@@ -82,7 +82,7 @@ Examples:
 
 ## Production Install
 
-`nohup uvicorn main:app --host 0.0.0.0 --port 31415 > logs.txt &`
+`KEYS_JSON=./keys.json nohup uvicorn main:app --host 0.0.0.0 --port 31415 &`
 
 ### Setting up timecrypt.service in Ubuntu
 
