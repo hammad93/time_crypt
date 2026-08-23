@@ -3,7 +3,8 @@ A cryptographic function that enables decryption based on length of time or othe
 
 ## Table of Contents
 
-- [Use Case](#use-case)  
+- [Use Case](#use-case)
+- [Quickstart](#quickstart)  
 - [Endpoints](#endpoints)  
   - [`test`](#test)  
   - [`create`](#create)  
@@ -21,12 +22,31 @@ A cryptographic function that enables decryption based on length of time or othe
     - [6. Check the Service Status](#6-check-the-service-status)  
   - [Maintaining Uptime](#maintaining-uptime)  
 - [Notes](#notes)  
-- [Quickstart](#quickstart)  
 - [User interface](#user-interface)
 
 
 ## Use Case
-There is a secret you want exposed only after a certain amount of time or at an exact date and time. You do not want yourself or anyone else to know this secret until we have reached this time-based requirement.
+
+There is a secret you want exposed only after a certain amount of time or at an exact date and time. You do not want yourself or anyone else to know this secret until we have reached this time-based requirement. Often, manufacturers of time-lock mechanisms make low-quality physical locks. Even if they improved, it may not be as effective against lock-picking compared to heavy-duty padlocks. Here, we present a solution that combines the two. We give the user a combination to put into multiple combination padlocks that is meant to be forgotten. If the user remembers, they can request a new random combination.
+
+## Quickstart
+
+This section outlines the 12 step program to create real-world time sensitive locks. The prerequisites include access to a physical safe with at least 8 digit combination. The time_crypt application must also be properly installed with Python on Windows, Mac, Linux, and other supported operating systems. The use case example is with a one digital combination safe featuring a 8 digit lock but longer combinations are achievable with multiple combination padlocks and a group lock box.
+
+1. Prepare the lock(s) by reading the instructions on to set a new combination (8 digits) to ensure the new combination will be entered accurately.
+2. Place your time-sensitive items into the safe, lock box, etc.
+3. Access the time_crypt application through the web user interface.
+4. Enter the time (such as "January 1st, 2026 12am") for when you would like the combination to be available or the expiry time. Natural language or standard timestamps are supported.
+5. Record only the key, a long string of only numbers and letters, but never the combination. The key can be entered into time_crypt to reveal the combination after the expiry time.
+6. Set the combination into your lock(s).
+7. Test the lock(s) out multiple times with the combination.
+8. Enter in the combination one last time. Based on Miller's law, the combination will be forgotten after some time.
+9. After the expiry time, retrieve the key.
+10. Enter in the key into time_crypt.
+11. If the current time is after the expiry time, time_crypt will output the combination based on the key. If it is before the expiry time, time_crypt will inform when it can be retrieved.
+12. Enter in the combination into the lock(s) to redeem the amount of time between the lock to the expiry time.
+
+Although the number of digits can be configured, the 8 digits that were meant to be "forgotten" is based on Miller's law that humans are able to remember about 7, plus or minus 2, objects in their short-term memory. 8 digits were also chosen because of the lack of availability of commerical locks and safes with more than 8 digits for their unlock combinations.
 
 ## Endpoints
 
@@ -149,19 +169,6 @@ In highly secure configurations, if the process stops, the private key is lost. 
 
 - For a production deployment, consider removing the `--reload` flag in the `ExecStart` command. The reload flag is more suited for development as it restarts the server when code changes are detected.
 - If you face any errors or the service doesn't start, follow diagnostic steps to check and debug any issues.
-
-
-## Quickstart
-
-This overviews how we can utilize the API in the real-world use case that the algorithm was made for. The requirements are that this algorithm works regardless of the padlock technologies. Often, manufacturers of time-lock mechanisms make low-quality physical locks. Even if they improved, it may not be as effective against lock-picking compared to heavy-duty padlocks. Here, we present a solution that combines the two. We give the user a combination to put into multiple combination padlocks that is meant to be forgotten. If the user remembers, they can request a new random combination. The combination is made up of 8 characters or digits. This means that this algorithm can be reused for many types of combination padlock technology in the past or present without additional costs.
-
-1. Generate a new code and input lock time. 
-  - Save the cryptographic message. The SaaS will save a .txt file with the message from your web browser.
-2. Enter the code into your padlock(s) and lock the safe.
-3. Check the status of the lock and unlock time. All time unlocked codes will automatically be exposed.
-  - To decrypt from an anonymous source, the SaaS can reads the message saved in step 1 in the `unlock` api and return the passcode if it's past the lock time.
-
-Although the number of digits can be configured, the 8 digits that were meant to be "forgotten" is based on Miller's law that humans are able to remember about 7, plus or minus 2, objects in their short-term memory. 8 digits were also chosen because of the lack of availability of commerical locks and safes with more than 8 digits for their unlock combinations. 
 
 
 ## User interface
